@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+
+import requests
+import re
+import os
+import time
+import asyncio
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.styles import Style
+from prompt_toolkit.shortcuts import ProgressBar
+from prompt_toolkit.formatted_text import HTML
+
+# CLOUD ASCII FRAMES
+CLOUD_ART = [
+    "            .--.           ",
+    "         .-(    ).         ",
+    "        (___.__)__)        ",
+    "     BLACK CLOUD v1.0      "
+]
+
+# Style für Eingabe & Menü
+style = Style.from_dict({
+    "prompt": "#9b59b6 bold",
+    "input": "#ffffff bold"
+})
+
+main_commands = [
+    "set target", "scan", "fuzz", "info", "show modules", "help", "exit", "banner"
+]
+completer = WordCompleter(main_commands, ignore_case=True, sentence=True)
+session = PromptSession(style=style, completer=completer)
+
+def show_banner(animation=1):
+    os.system("clear")
+    for i in range(animation):
+        for _ in range(2):
+            print("\n")
+        for line in CLOUD_ART:
+            print("\033[95m" + line + "\033[0m")
+        print("\033[95mScanning the sky for 0-day clouds ...\033[0m\n")
+        time.sleep(0.18)
+        os.system("clear")
+    for _ in range(2):
+        print("\n")
+    for line in CLOUD_ART:
+        print("\033[95m" + line + "\033[0m")
+    print()
+
+def print_help():
+    print("\033[95mAvailable Commands:\033[0m")
+    for cmd in main_commands:
+        print(f"  \033[94m{cmd}\033[0m")
+
+def scan_patterns(data):
+    # Eigene Patterns, z.B. 0-day-Triggers oder Schwachstellen
+    patterns = [
+        (r"eval\(", "JavaScript eval() verwendet"),
+        (r"document\.write", "document.write gefunden"),
+        (r"(?i)api_key ?= ?['\"]\w+['\"]", "API Key im Code erkannt"),
+        (r"onerror\s*=", "onerror-Handler (XSS-Vektor)"),
+        (r"\.php\?", "verdaechtige PHP-Query gefunden"),
+    ]
+    findings = []
+    for pat, descr in patterns:
+        if re.search(pat, data):
+            findings.append(f"{descr}   [Pattern: {pat}]")
+    return findings
+
+async def scan_url(target):
+    print(f"\n\033[95m>>> Website Scan beginnt f&uuml;r: {target}\033[0m")
+    files_to_scan = []
+
+    # Sammle alle .js und Hauptseiten-Links
+    try:
+        resp = requests.get(target, timeout=6)
+        html = resp.text
+        files_to_scan.append((target, len(html)))
+        # Finde JS-Files im HTML
+        for match in re.findall(r'src=[\'"]([^\'"]+\.js)', html):
+            full_url = match if match.startswith("http") else target.rstrip("/") + "/" + match.lstrip("/")
+            try:
+                content = requests.get(full_url, timeout=4).text
+                files_to_scan.append((full_url, len(content)))
+            except Exception:
+                continue
+    except Exception as e:
+        print(f"\033[91m[Fehler] Ziel nicht erreichbar: {e}\033[0m")
+        return
+
+    # Ladebalken mit Datei-Namen & -Länge
+    findings_total = []
+    with ProgressBar(title=HTML('<b><style fg="#9b59b6">🔎 Scannen läuft...</style></b>')) as pb:
+        for fname, flen in pb(files_to_scan):
+            status = f"\033[94mDatei: {fname}\nL&auml;nge: {flen} Zeichen\033[0m"
+            print(status)
+            try:
+                filedata = requests.get(fname, timeout=5).text if fname != target else html
+                findings = scan_patterns(filedata)
+                if findings:
+                    print("\033[91mGefunden:\033[0m")
+                    for f in findings:
+                        print("  \033[93m" + f + "\033[0m")
+                    findings_total.extend(findings)
+                else:
+                    print("\033[92m✓ Kein kritisches Pattern gefunden.\033[0m")
+            except Exception as e:
+                print(f"\033[91m[X] Fehler beim Zugriff: {e}\033[0m")
+            time.sleep(0.6)
+
+    print("\n\033[95mScan abgeschlossen.\033[0m\n")
+    if findings_total:
+        print("\033[91m☁️ Summary - Gefundene Patterns:\033[0m")
+        for f in findings_total:
+            print("  \033[91m{}\033[0m".format(f))
+    else:
+        print("\033[92m☁️ Keine kritischen Auffälligkeiten gefunden!\033[0m")
+
+async def main():
+    show_banner(animation=2)
+    print("\033[96mWelcome to Black Cloud — Type 'help' for commands\033[0m\n")
+    target_url = "https://example.com"
+    while True:
+        try:
+            cmd = await session.prompt_async(HTML('<b><style fg="#9b59b6">blackcloud &gt; </style></b>'))
+            cmd = cmd.strip()
+            if cmd.startswith("set target"):
+                parts = cmd.split(" ", 2)
+                if len(parts) >= 3:
+                    target_url = parts[2]
+                    print(f"\033[92mTarget gesetzt auf:\033[0m {target_url}")
+                else:
+                    print("\033[93mBitte ein Ziel angeben! Bsp: set target https://seite.de\033[0m")
+            elif cmd == "scan":
+                await scan_url(target_url)
+            elif cmd == "help":
+                print_help()
+            elif cmd == "banner":
+                show_banner(2)
+            elif cmd == "exit":
+                print("\033[95mBis zum nächsten Mal! ☁️\033[0m")
+                break
+            elif cmd == "info":
+                print(f"\033[96mAktuelles Ziel:\033[0m {target_url}")
+            elif cmd == "show modules":
+                print("\033[94mModule: scan, set target, info, banner\033[0m")
+            else:
+                print("\033[91mBefehl nicht erkannt. 'help' zeigt alle Befehle.\033[0m")
+        except KeyboardInterrupt:
+            print("\n\033[95mAbbruch erkannt. Beende....\033[0m")
+            break
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        print(f"\033[91mFehler: {e}\033[0m")

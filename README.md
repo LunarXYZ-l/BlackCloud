@@ -1,12 +1,13 @@
 # BlackCloud
 A web vulnerability scanner.
 
-##Installation
+## Installation
+``` bash
 git clone https://github.com/yourusername/blackcloud.git
 cd blackcloud
 pip install -r requirements.txt
 python3 BlackCloud.py
-
+```
 
 ## Usage
 

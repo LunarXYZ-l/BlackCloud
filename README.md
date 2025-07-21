@@ -16,4 +16,6 @@ python3 BlackCloud
 set target https://example.com
 - To start scanning:
 scan
+
+## Preview
 ![Screenshot](Screenshot_20250721-221232.png)

@@ -19,5 +19,5 @@ scan
 
 ## Preview
 
-![Alt 1](images/Screenshot_20250721-221232.png)
-![Alt 2](images/Screenshot_20250721-221304.png)
+![First screenshot](Screenshot_20250721-221232.png)
+![Second screenshot](Screenshot_20250721-221304.png)

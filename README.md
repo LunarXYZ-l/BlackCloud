@@ -3,7 +3,7 @@ A web vulnerability scanner.
 
 ## Supported Languages
 
-- **German (de)** — only for the `scan` & `info` command  
+- **German (de)** — only for the `scan`, `info` & `set target` command  
 - **English (en)** — partial support
 
 ## Planned Language Support

@@ -18,6 +18,6 @@ set target https://example.com
 scan
 
 ## Preview
-![Screenshot](Screenshot_20250721-221232.png)
 
-![Description](images/Screenshot_20250721-221304.png)
+![Alt 1](images/Screenshot_20250721-221232.png)
+![Alt 2](images/Screenshot_20250721-221304.png)

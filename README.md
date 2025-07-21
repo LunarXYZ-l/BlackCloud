@@ -7,11 +7,12 @@ A web vulnerability scanner.
 git clone https://github.com/yourusername/blackcloud.git
 cd blackcloud
 
-2. **Install the required Python packages:**
+2. ## Installation
+git clone https://github.com/yourusername/blackcloud.git
+cd blackcloud
 pip install -r requirements.txt
+python3 BlackCloud.py
 
-3. **Run Black Cloud:**
-python3 BlackCloud
 
 ## Usage
 

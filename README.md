@@ -1,6 +1,15 @@
 # BlackCloud
 A web vulnerability scanner.
 
+## Supported Languages
+
+- **German (de)** — fully supported  
+- **English (en)** — partial support
+
+## Planned Language Support
+
+- **English (en)** — full support coming soon
+
 ## Installation
 ``` bash
 git clone https://github.com/LunarXYZ-l/BlackCloud.git
